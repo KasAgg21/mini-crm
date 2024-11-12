@@ -1,24 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import SegmentBuilder from './components/SegmentBuilder';
+import CampaignsPage from './components/CampaignsPage';
+import Login from './components/Login';
+import Register from './components/Register';
+import { AuthContext } from './contexts/AuthContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 function App() {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  const PrivateRoute = ({ element }) => {
+    return user ? element : <Navigate to="/login" />;
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<PrivateRoute element={<SegmentBuilder />} />} />
+          <Route path="/campaigns" element={<PrivateRoute element={<CampaignsPage />} />} />
+          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+          <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 
